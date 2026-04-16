@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sign Up | AeroCurator – Smart Inventory System</title>
+<meta name="description" content="Create your AeroCurator account to manage drone fleet inventory, purchases and sales."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "primary-container": "#849df2", "surface-dim": "#060e20",
+                "on-primary": "#012678", "on-surface-variant": "#a3aac4",
+                "outline-variant": "#40485d", "on-surface": "#dee5ff",
+                "on-primary-container": "#001c5e", "surface-container-low": "#091328",
+                "surface-container-highest": "#192540", "error": "#ff6e84",
+                "background": "#060e20", "primary": "#93aaff", "surface": "#060e20",
+                "primary-dim": "#829aef", "surface-container": "#0f1930",
+                "surface-bright": "#1f2b49", "secondary": "#e0e3e5",
+                "surface-container-high": "#141f38", "outline": "#6d758c",
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+            fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Manrope"] }
+        }
+    }
+}
+</script>
+<style>
+    body { font-family: 'Manrope', sans-serif; }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .signature-gradient { background: linear-gradient(135deg, #93aaff 0%, #849df2 100%); }
+
+    /* Form input */
+    .form-input {
+        width: 100%; padding: 14px 16px 14px 44px;
+        background: #141f38; border: none; outline: none;
+        border-radius: 12px; color: #dee5ff;
+        font-family: 'Manrope', sans-serif; font-size: 0.875rem;
+        transition: background .2s, box-shadow .2s;
+    }
+    .form-input:focus { background: #1f2b49; box-shadow: 0 0 0 2px #829aef; }
+    .form-input::placeholder { color: #6d758c; }
+    .form-input.no-icon { padding-left: 16px; }
+
+    /* Password strength bar */
+    #strength-bar { height: 4px; border-radius: 9999px; transition: width .4s, background .4s; width: 0%; }
+
+    /* Toast */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 14px 20px; border-radius: 14px; font-size: .875rem; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.3); animation: slideIn .3s ease forwards; min-width: 280px; }
+    .toast-success { background: #0f2b1a; color: #4ade80; border: 1px solid rgba(74,222,128,.2); }
+    .toast-error   { background: #2b0f16; color: #ff6e84; border: 1px solid rgba(255,110,132,.2); }
+    .toast-info    { background: #111f38; color: #93aaff; border: 1px solid rgba(147,170,255,.2); }
+    @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { to { transform: translateX(40px); opacity: 0; } }
+
+    /* Field error label */
+    .field-error { display: none; color: #ff6e84; font-size: 0.72rem; font-weight: 600; margin-top: 5px; margin-left: 4px; }
+    .field-error.show { display: block; }
+    .input-error { box-shadow: 0 0 0 2px #ff6e84 !important; }
+
+    /* Step animation */
+    .page-fade { animation: pageFade .35s ease forwards; }
+    @keyframes pageFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary selection:text-on-primary min-h-screen">
+<div id="toast-container"></div>
+
+<main class="min-h-screen flex flex-col md:flex-row">
+
+  <!-- ── Brand Section (Left) ──────────────────────────────────────────── -->
+  <section class="hidden md:flex md:w-5/12 relative flex-col justify-between p-12 overflow-hidden bg-surface-container-low">
+    <div class="absolute inset-0 z-0">
+      <img class="w-full h-full object-cover opacity-35 mix-blend-luminosity"
+           src="https://images.unsplash.com/photo-1579829366248-204fe8413f31?w=1200&auto=format&fit=crop&q=60"
+           alt="Drone components engineering"/>
+      <div class="absolute inset-0 bg-gradient-to-tr from-surface via-surface/85 to-transparent"></div>
+    </div>
+
+    <!-- Logo -->
+    <div class="relative z-10 flex items-center gap-3">
+      <div class="w-10 h-10 signature-gradient rounded-lg flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings:'FILL' 1">flight_takeoff</span>
+      </div>
+      <span class="text-2xl font-extrabold tracking-tighter uppercase">AeroCurator</span>
+    </div>
+
+    <!-- Hero copy -->
+    <div class="relative z-10 max-w-sm">
+      <h1 class="text-5xl font-extrabold leading-[1.1] tracking-tight mb-5">
+        Join the <span class="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">Fleet.</span>
+      </h1>
+      <p class="text-on-surface-variant text-base leading-relaxed mb-8">
+        Get full visibility over every drone component — from rotors to ESCs — with real-time stock alerts, purchase tracking, and analytics.
+      </p>
+
+      <!-- Feature pills -->
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(147,170,255,0.15)">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;font-variation-settings:'FILL' 1">inventory_2</span>
+          </div>
+          <span class="text-sm text-on-surface-variant">Full inventory CRUD with SKU tracking</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(74,222,128,0.15)">
+            <span class="material-symbols-outlined" style="color:#4ade80;font-size:18px;font-variation-settings:'FILL' 1">shopping_cart</span>
+          </div>
+          <span class="text-sm text-on-surface-variant">Purchase & sales flow with stock sync</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,110,132,0.15)">
+            <span class="material-symbols-outlined text-error" style="font-size:18px;font-variation-settings:'FILL' 1">notifications_active</span>
+          </div>
+          <span class="text-sm text-on-surface-variant">Smart low-stock alerts & reorder prompts</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(250,204,21,0.15)">
+            <span class="material-symbols-outlined text-yellow-400" style="font-size:18px;font-variation-settings:'FILL' 1">bar_chart</span>
+          </div>
+          <span class="text-sm text-on-surface-variant">Analytics, reports & revenue trends</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10">
+      <p class="text-xs font-medium text-outline">© 2024 AeroCurator Precision Systems. All rights reserved.</p>
+    </div>
+  </section>
+
+  <!-- ── Signup Form Section (Right) ──────────────────────────────────── -->
+  <section class="flex-1 flex flex-col justify-center px-6 py-10 md:px-12 lg:px-20 bg-surface z-10 overflow-y-auto">
+    <div class="max-w-md w-full mx-auto page-fade">
+
+      <!-- Mobile logo -->
+      <div class="md:hidden flex items-center gap-3 mb-8">
+        <div class="w-8 h-8 signature-gradient rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary-container text-sm" style="font-variation-settings:'FILL' 1">flight_takeoff</span>
+        </div>
+        <span class="text-xl font-bold tracking-tight">AeroCurator</span>
+      </div>
+
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-on-surface mb-2">Create Account</h2>
+        <p class="text-on-surface-variant">Set up your drone inventory command centre.</p>
+      </div>
+
+      <form id="signup-form" novalidate class="space-y-5">
+
+        <!-- Full Name -->
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2 ml-1" for="name">Full Name</label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">badge</span>
+            </div>
+            <input class="form-input" id="name" name="name" placeholder="e.g. Alex Reeves" autocomplete="name" required/>
+          </div>
+          <p class="field-error" id="err-name">Please enter your full name (min 2 characters)</p>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2 ml-1" for="email">Control Email</label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">alternate_email</span>
+            </div>
+            <input class="form-input" id="email" name="email" type="email" placeholder="commander@aerocurator.io" autocomplete="email" required/>
+          </div>
+          <p class="field-error" id="err-email">Please enter a valid email address</p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2 ml-1" for="password">Security Key</label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">lock</span>
+            </div>
+            <input class="form-input pr-12" id="password" name="password" type="password" placeholder="Min 6 characters" autocomplete="new-password" required/>
+            <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface transition-colors" id="toggle-pw" type="button">
+              <span class="material-symbols-outlined text-[20px]" id="pw-icon">visibility</span>
+            </button>
+          </div>
+          <!-- Strength bar -->
+          <div class="mt-2 h-1 rounded-full bg-surface-container-high overflow-hidden">
+            <div id="strength-bar"></div>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-1 ml-1" id="strength-label"> </p>
+          <p class="field-error" id="err-password">Password must be at least 6 characters</p>
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2 ml-1" for="confirm-password">Confirm Key</label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+            </div>
+            <input class="form-input pr-12" id="confirm-password" name="confirm-password" type="password" placeholder="Re-enter your password" autocomplete="new-password" required/>
+            <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface transition-colors" id="toggle-cpw" type="button">
+              <span class="material-symbols-outlined text-[20px]" id="cpw-icon">visibility</span>
+            </button>
+          </div>
+          <p class="field-error" id="err-confirm">Passwords do not match</p>
+        </div>
+
+        <!-- Role -->
+        <div>
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2 ml-1">Access Role</label>
+          <div class="grid grid-cols-2 p-1 bg-surface-container-high rounded-xl">
+            <button class="py-3 px-4 rounded-lg text-sm font-bold transition-all bg-primary text-on-primary shadow-sm" id="role-user" type="button" onclick="setRole('user')">
+              <span class="material-symbols-outlined text-[16px] mr-1" style="font-variation-settings:'FILL' 1;vertical-align:middle">person</span>User
+            </button>
+            <button class="py-3 px-4 rounded-lg text-sm font-bold transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-bright" id="role-admin" type="button" onclick="setRole('admin')">
+              <span class="material-symbols-outlined text-[16px] mr-1" style="vertical-align:middle">admin_panel_settings</span>Admin
+            </button>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-2 ml-1">
+            <span class="text-primary font-semibold">Admin</span> has full CRUD access.
+            <span class="text-on-surface font-semibold">User</span> can view and record transactions.
+          </p>
+        </div>
+
+        <!-- Terms checkbox -->
+        <div class="flex items-start gap-3 px-1">
+          <input class="w-5 h-5 mt-0.5 rounded flex-shrink-0 border-outline-variant bg-surface-container-high text-primary focus:ring-primary focus:ring-offset-surface" id="terms" type="checkbox" required/>
+          <label class="text-sm text-on-surface-variant cursor-pointer leading-relaxed" for="terms">
+            I agree to deploy this account under the AeroCurator operational protocol and accept all
+            <span class="text-primary font-semibold hover:underline cursor-pointer">mission terms</span>.
+          </label>
+        </div>
+        <p class="field-error" id="err-terms">You must accept the terms to proceed</p>
+
+        <!-- Submit -->
+        <button class="w-full signature-gradient text-on-primary-container font-bold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-base flex items-center justify-center gap-2 mt-2"
+                id="btn-signup" type="submit">
+          <span id="btn-text">Launch Account</span>
+          <span class="material-symbols-outlined" id="btn-icon-el">rocket_launch</span>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="mt-8 pt-8 border-t border-outline-variant/25 text-center">
+        <p class="text-sm text-on-surface-variant">
+          Already have credentials?
+          <a class="text-primary font-bold hover:underline" href="/">Initialize Session</a>
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const BASE_URL = "http://localhost:5000";
+let selectedRole = "user";
+
+// ── Role Toggle ──────────────────────────────────────────────────────────────
+function setRole(role) {
+    selectedRole = role;
+    const activeClass  = "py-3 px-4 rounded-lg text-sm font-bold transition-all bg-primary text-on-primary shadow-sm";
+    const inactiveClass = "py-3 px-4 rounded-lg text-sm font-bold transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-bright";
+    document.getElementById("role-user").className  = role === "user"  ? activeClass : inactiveClass;
+    document.getElementById("role-admin").className = role === "admin" ? activeClass : inactiveClass;
+}
+
+// ── Password Visibility ──────────────────────────────────────────────────────
+document.getElementById("toggle-pw").addEventListener("click", () => {
+    const pw = document.getElementById("password");
+    const ic = document.getElementById("pw-icon");
+    pw.type = pw.type === "password" ? "text" : "password";
+    ic.textContent = pw.type === "password" ? "visibility" : "visibility_off";
+});
+document.getElementById("toggle-cpw").addEventListener("click", () => {
+    const pw = document.getElementById("confirm-password");
+    const ic = document.getElementById("cpw-icon");
+    pw.type = pw.type === "password" ? "text" : "password";
+    ic.textContent = pw.type === "password" ? "visibility" : "visibility_off";
+});
+
+// ── Password Strength ────────────────────────────────────────────────────────
+document.getElementById("password").addEventListener("input", function () {
+    const val   = this.value;
+    const bar   = document.getElementById("strength-bar");
+    const label = document.getElementById("strength-label");
+
+    let score = 0;
+    if (val.length >= 6)  score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = [
+        { w: "0%",   bg: "transparent",  txt: "" },
+        { w: "25%",  bg: "#ff6e84",      txt: "Weak" },
+        { w: "50%",  bg: "#facc15",      txt: "Fair" },
+        { w: "75%",  bg: "#93aaff",      txt: "Good" },
+        { w: "100%", bg: "#4ade80",      txt: "Strong" },
+    ];
+    const lvl = levels[Math.min(score, 4)];
+    bar.style.width      = lvl.w;
+    bar.style.background = lvl.bg;
+    label.textContent    = lvl.txt;
+    label.style.color    = lvl.bg;
+});
+
+// ── Live Confirm Match ───────────────────────────────────────────────────────
+document.getElementById("confirm-password").addEventListener("input", function () {
+    const pw  = document.getElementById("password").value;
+    const err = document.getElementById("err-confirm");
+    if (this.value && this.value !== pw) {
+        err.classList.add("show");
+        this.style.boxShadow = "0 0 0 2px #ff6e84";
+    } else {
+        err.classList.remove("show");
+        this.style.boxShadow = "";
+    }
+});
+
+// ── Form Field Validation Helpers ────────────────────────────────────────────
+function setFieldError(inputId, errId, show) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errId);
+    if (show) {
+        err.classList.add("show");
+        input.style.boxShadow = "0 0 0 2px #ff6e84";
+    } else {
+        err.classList.remove("show");
+        input.style.boxShadow = "";
+    }
+}
+
+function validateForm() {
+    let valid = true;
+    const name     = document.getElementById("name").value.trim();
+    const email    = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm  = document.getElementById("confirm-password").value;
+    const terms    = document.getElementById("terms").checked;
+
+    if (name.length < 2)            { setFieldError("name",     "err-name",     true);  valid = false; } else { setFieldError("name",     "err-name",     false); }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { setFieldError("email",    "err-email",    true);  valid = false; } else { setFieldError("email",    "err-email",    false); }
+    if (password.length < 6)        { setFieldError("password", "err-password", true);  valid = false; } else { setFieldError("password", "err-password", false); }
+    if (confirm !== password)       { setFieldError("confirm-password", "err-confirm", true);  valid = false; } else { setFieldError("confirm-password", "err-confirm", false); }
+    if (!terms)                     { document.getElementById("err-terms").classList.add("show");    valid = false; } else { document.getElementById("err-terms").classList.remove("show"); }
+
+    return valid;
+}
+
+// ── Form Submit ──────────────────────────────────────────────────────────────
+document.getElementById("signup-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const name     = document.getElementById("name").value.trim();
+    const email    = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm  = document.getElementById("confirm-password").value;
+
+    const btnText = document.getElementById("btn-text");
+    const btnIcon = document.getElementById("btn-icon-el");
+    btnText.textContent  = "Deploying…";
+    btnIcon.textContent  = "sync";
+    document.getElementById("btn-signup").disabled = true;
+
+    try {
+        const res = await fetch(`${BASE_URL}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name,
+                email,
+                password,
+                confirm_password: confirm,
+                role: selectedRole,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Registration failed");
+
+        showToast(`Account created for ${name}! Redirecting to login…`, "success");
+        setTimeout(() => { window.location.href = "/"; }, 1800);
+
+    } catch (err) {
+        showToast(err.message, "error");
+        btnText.textContent = "Launch Account";
+        btnIcon.textContent = "rocket_launch";
+        document.getElementById("btn-signup").disabled = false;
+    }
+});
+
+// ── Redirect if already logged in ───────────────────────────────────────────
+if (localStorage.getItem("ac_token")) {
+    window.location.href = "/dashboard";
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container");
+    const icons = { success: "check_circle", error: "error", info: "info" };
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1">${icons[type] || "info"}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = "fadeOut .3s ease forwards";
+        setTimeout(() => toast.remove(), 320);
+    }, type === "success" ? 4000 : 3500);
+}
+</script>
+</body>
+</html>
