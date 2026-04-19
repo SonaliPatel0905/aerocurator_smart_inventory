@@ -1,31 +1,30 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { err } = require('../utils');
 
-exports.protect = async (req, res, next) => {
-    let token;
-    
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        token = req.headers.authorization.split(' ')[1];
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_local_dev';
+
+const requireAuth = (req, res, next) => {
+    const authHeader = req.header('Authorization') || '';
+    if (!authHeader.startsWith('Bearer ')) {
+        return err(res, 'Missing or invalid Authorization header', 401);
     }
     
-    if (!token) {
-        return res.status(401).json({ success: false, error: 'Not authorized to access this route' });
-    }
-    
+    const token = authHeader.replace('Bearer ', '');
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await User.findById(decoded.id);
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded; // { id, role, email }
         next();
-    } catch (err) {
-        return res.status(401).json({ success: false, error: 'Not authorized to access this route' });
+    } catch (error) {
+        return err(res, 'Invalid or expired token', 401);
     }
 };
 
-exports.authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, error: `User role ${req.user.role} is not authorized to access this route` });
-        }
+const requireAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
         next();
-    };
+    } else {
+        return err(res, 'Admin access required', 403);
+    }
 };
+
+module.exports = { requireAuth, requireAdmin, JWT_SECRET };

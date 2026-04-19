@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | AeroCurator – Smart Inventory System</title>
+<meta name="description" content="AeroCurator login – the industry-leading command center for drone fleet inventory management."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- All pages served via Flask at localhost:5000 -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                "primary-container": "#849df2", "surface-dim": "#060e20",
+                "on-primary": "#012678", "on-surface-variant": "#a3aac4",
+                "outline-variant": "#40485d", "on-surface": "#dee5ff",
+                "on-primary-container": "#001c5e", "surface-container-low": "#091328",
+                "surface-variant": "#192540", "surface-container-highest": "#192540",
+                "error-container": "#a70138", "outline": "#6d758c",
+                "error": "#ff6e84", "background": "#060e20",
+                "primary": "#93aaff", "surface": "#060e20",
+                "primary-dim": "#829aef", "surface-container": "#0f1930",
+                "surface-bright": "#1f2b49", "secondary": "#e0e3e5",
+                "surface-container-high": "#141f38",
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+            fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Manrope"] }
+        }
+    }
+}
+</script>
+<style>
+    body { font-family: 'Manrope', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .signature-gradient { background: linear-gradient(135deg, #93aaff 0%, #849df2 100%); }
+    .glass-panel { background: rgba(31,43,73,0.7); backdrop-filter: blur(24px); }
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 14px 20px; border-radius: 14px; font-size: .875rem; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.3); animation: slideIn .3s ease forwards; min-width: 280px; }
+    .toast-success { background: #0f2b1a; color: #4ade80; border: 1px solid rgba(74,222,128,.2); }
+    .toast-error { background: #2b0f16; color: #ff6e84; border: 1px solid rgba(255,110,132,.2); }
+    @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary selection:text-on-primary">
+<div id="toast-container"></div>
+<main class="min-h-screen flex flex-col md:flex-row">
+
+  <!-- Brand Section (Left) -->
+  <section class="hidden md:flex md:w-7/12 relative flex-col justify-between p-12 overflow-hidden bg-surface-container-low">
+    <div class="absolute inset-0 z-0">
+      <img class="w-full h-full object-cover opacity-40 mix-blend-luminosity"
+           src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=1200&auto=format&fit=crop&q=60"
+           alt="Drone flying through atmospheric sky"/>
+      <div class="absolute inset-0 bg-gradient-to-tr from-surface via-surface/80 to-transparent"></div>
+    </div>
+    <div class="relative z-10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 signature-gradient rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings:'FILL' 1;">flight_takeoff</span>
+        </div>
+        <span class="text-2xl font-extrabold tracking-tighter text-on-surface uppercase">AeroCurator</span>
+      </div>
+    </div>
+    <div class="relative z-10 max-w-xl">
+      <h1 class="text-6xl font-extrabold leading-[1.1] tracking-tight mb-6">
+        Precision <span class="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">Telemetry</span> at Scale.
+      </h1>
+      <p class="text-on-surface-variant text-lg leading-relaxed mb-10">
+        AeroCurator is the industry-leading command center for professional drone fleets.
+        Manage inventory, track telemetry, and optimize your spatial operations.
+      </p>
+      <div class="grid grid-cols-2 gap-8">
+        <div class="flex flex-col gap-2">
+          <span class="text-3xl font-bold text-on-surface">99.9%</span>
+          <span class="text-xs font-bold tracking-[0.1em] uppercase text-on-surface-variant">Uptime Reliability</span>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-3xl font-bold text-on-surface">150ms</span>
+          <span class="text-xs font-bold tracking-[0.1em] uppercase text-on-surface-variant">Latent Sync Rate</span>
+        </div>
+      </div>
+    </div>
+    <div class="relative z-10">
+      <p class="text-xs font-medium text-outline">© 2024 AeroCurator Precision Systems. All rights reserved.</p>
+    </div>
+  </section>
+
+  <!-- Login Form Section (Right) -->
+  <section class="flex-1 flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24 bg-surface z-10">
+    <div class="max-w-md w-full mx-auto">
+      <!-- Mobile Logo -->
+      <div class="md:hidden flex items-center gap-3 mb-12">
+        <div class="w-8 h-8 signature-gradient rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary-container text-sm" style="font-variation-settings:'FILL' 1;">flight_takeoff</span>
+        </div>
+        <span class="text-xl font-bold tracking-tight">AeroCurator</span>
+      </div>
+
+      <div class="mb-10">
+        <h2 class="text-3xl font-bold text-on-surface mb-2">Welcome Back</h2>
+        <p class="text-on-surface-variant">Enter your flight credentials to access the deck.</p>
+      </div>
+
+      <form id="login-form" class="space-y-6">
+        <!-- Role Toggle -->
+        <div class="space-y-2 mb-6">
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant ml-1">Access Role</label>
+          <div class="grid grid-cols-2 p-1 bg-surface-container-high rounded-xl">
+            <button class="py-2 px-4 rounded-lg text-sm font-bold transition-all bg-primary text-on-primary shadow-sm"
+                    id="role-user" type="button" onclick="setRole('user')">User</button>
+            <button class="py-2 px-4 rounded-lg text-sm font-bold transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-bright"
+                    id="role-admin" type="button" onclick="setRole('admin')">Admin</button>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant ml-1" for="email">Control Email</label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">alternate_email</span>
+            </div>
+            <input class="block w-full pl-11 pr-4 py-4 bg-surface-container-high border-none rounded-xl text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary-dim transition-all outline-none"
+                   id="email" name="email" placeholder="commander@aerocurator.io" required type="email"/>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center px-1">
+            <label class="block text-xs font-bold tracking-widest uppercase text-on-surface-variant" for="password">Security Key</label>
+            <a class="text-xs font-bold text-primary hover:text-primary-container transition-colors" href="#" onclick="handleForgot(event)">Forgot key?</a>
+          </div>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">lock</span>
+            </div>
+            <input class="block w-full pl-11 pr-12 py-4 bg-surface-container-high border-none rounded-xl text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary-dim transition-all outline-none"
+                   id="password" name="password" placeholder="••••••••••••" required type="password"/>
+            <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface transition-colors" id="toggle-pw" type="button">
+              <span class="material-symbols-outlined text-[20px]" id="pw-icon">visibility</span>
+            </button>
+          </div>
+        </div>
+
+
+        <!-- Submit -->
+        <button class="w-full signature-gradient text-on-primary-container font-bold py-4 px-6 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
+                id="btn-login" type="submit">
+          <span id="btn-text">Initialize Session</span>
+          <span class="material-symbols-outlined" id="btn-icon">arrow_forward</span>
+        </button>
+      </form>
+
+
+      <p class="mt-12 text-center text-sm text-on-surface-variant">
+        New station administrator?
+        <a class="text-primary font-bold hover:underline" href="/signup" id="register-link">Apply for credentials</a>
+      </p>
+
+      <!-- Quick test credentials hint -->
+      <div class="mt-6 p-4 bg-surface-container-high rounded-xl text-xs text-on-surface-variant space-y-1">
+        <p class="font-bold text-primary mb-2">⚡ Quick Access Credentials</p>
+        <p><span class="text-on-surface font-semibold">Admin:</span> admin@aerocurator.io / admin123</p>
+        <p><span class="text-on-surface font-semibold">User:</span> pilot@aerocurator.io / user1234</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const BASE_URL = "http://localhost:5000";
+let selectedRole = "user";
+
+function setRole(role) {
+    selectedRole = role;
+    const userBtn  = document.getElementById("role-user");
+    const adminBtn = document.getElementById("role-admin");
+    const active   = "py-2 px-4 rounded-lg text-sm font-bold transition-all bg-primary text-on-primary shadow-sm";
+    const inactive = "py-2 px-4 rounded-lg text-sm font-bold transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-bright";
+    userBtn.className  = role === "user"  ? active : inactive;
+    adminBtn.className = role === "admin" ? active : inactive;
+}
+
+// Password toggle
+document.getElementById("toggle-pw").addEventListener("click", () => {
+    const pw = document.getElementById("password");
+    const ic = document.getElementById("pw-icon");
+    pw.type = pw.type === "password" ? "text" : "password";
+    ic.textContent = pw.type === "password" ? "visibility" : "visibility_off";
+});
+
+// Login form
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email   = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const btnText = document.getElementById("btn-text");
+    const btnIcon = document.getElementById("btn-icon");
+
+    btnText.textContent = "Initializing…";
+    btnIcon.textContent = "sync";
+
+    try {
+        const res = await fetch(`${BASE_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Login failed");
+
+        localStorage.setItem("ac_token", data.data.token);
+        localStorage.setItem("ac_user", JSON.stringify({
+            token: data.data.token,
+            name:  data.data.name,
+            email: data.data.email,
+            role:  data.data.role,
+        }));
+
+        showToast("Session initialized! Redirecting…", "success");
+        setTimeout(() => { 
+            window.location.href = data.data.role === "admin" ? "/admin-dashboard" : "/user-dashboard"; 
+        }, 800);
+    } catch (err) {
+        showToast(err.message, "error");
+        btnText.textContent = "Initialize Session";
+        btnIcon.textContent = "arrow_forward";
+    }
+});
+
+// Register link – go to dedicated signup page
+document.getElementById("register-link").addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "/signup";
+});
+
+// Redirect if already logged in
+if (localStorage.getItem("ac_token")) {
+    try {
+        const user = JSON.parse(localStorage.getItem("ac_user"));
+        window.location.href = user.role === "admin" ? "/admin-dashboard" : "/user-dashboard";
+    } catch {
+        window.location.href = "/user-dashboard";
+    }
+}
+
+function showToast(message, type = "info") {
+    let container = document.getElementById("toast-container");
+    const icons = { success: "check_circle", error: "error", info: "info" };
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1">${icons[type]||'info'}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.animation = "fadeOut .3s ease forwards"; setTimeout(() => toast.remove(), 320); }, 3500);
+}
+
+// Forgot Password Flow
+async function handleForgot(e) {
+    e.preventDefault();
+    const email = prompt("Enter your account email for recovery token generation:");
+    if (!email) return;
+    try {
+        const res = await Api.forgotPassword(email);
+        showToast("Recovery initiated: Check console for Mock Token.", "success");
+        
+        const token = prompt("Enter the reset token (from console):");
+        if(!token) return;
+        
+        const newPassword = prompt("Enter your new password:");
+        if(!newPassword) return;
+        
+        await Api.resetPassword(token, newPassword);
+        showToast("Password reset successfully. You may log in now.", "success");
+    } catch (err) {
+        showToast(err.message || "Failed to reset password.", "error");
+    }
+}
+</script>
+</body>
+</html>

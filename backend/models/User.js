@@ -1,45 +1,38 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Please add a name']
-    },
-    email: {
-        type: String,
-        required: [true, 'Please add an email'],
-        unique: true,
-        match: [
-            /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-            'Please add a valid email'
-        ]
-    },
-    role: {
-        type: String,
-        enum: ['admin', 'staff'],
-        default: 'staff'
-    },
-    password: {
-        type: String,
-        required: [true, 'Please add a password'],
-        minlength: 6,
-        select: false // Avoid returning password by default
-    }
-}, { timestamps: true });
-
-// Encrypt password using bcrypt before saving
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        next();
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password_hash: { type: String, required: true },
+    role: { type: String, enum: ['admin', 'user'], default: 'user' },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date
+}, {
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-// Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+// Avoid duplicate hashes
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password_hash')) return next();
+    const salt = await bcrypt.genSalt(10);
+    this.password_hash = await bcrypt.hash(this.password_hash, salt);
+    next();
+});
+
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password_hash);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+// Map _id to id safely in toJson
+userSchema.set('toJSON', {
+    transform: (doc, ret) => {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v;
+        delete ret.password_hash;
+        return ret;
+    }
+});
+
+module.exports = mongoose.model('User', userSchema);
