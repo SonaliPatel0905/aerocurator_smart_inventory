@@ -9,6 +9,8 @@
 <!-- All pages served via Flask at localhost:5000 -->
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/auth.js"></script>
 <script id="tailwind-config">
 tailwind.config = {
     darkMode: "class",
@@ -206,25 +208,14 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     btnIcon.textContent = "sync";
 
     try {
-        const res = await fetch(`${BASE_URL}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Login failed");
+        const res = await Api.login(email, password);
+        const data = res.data;
 
-        localStorage.setItem("ac_token", data.data.token);
-        localStorage.setItem("ac_user", JSON.stringify({
-            token: data.data.token,
-            name:  data.data.name,
-            email: data.data.email,
-            role:  data.data.role,
-        }));
+        Auth.setSession(data.token, data.name, data.email, data.role);
 
         showToast("Session initialized! Redirecting…", "success");
         setTimeout(() => { 
-            window.location.href = data.data.role === "admin" ? "/admin-dashboard" : "/user-dashboard"; 
+            window.location.href = data.role === "admin" ? "/admin-dashboard" : "/user-dashboard"; 
         }, 800);
     } catch (err) {
         showToast(err.message, "error");
@@ -242,11 +233,11 @@ document.getElementById("register-link").addEventListener("click", (e) => {
 // Redirect if already logged in
 if (localStorage.getItem("ac_token")) {
     try {
-        const user = JSON.parse(localStorage.getItem("ac_user"));
-        window.location.href = user.role === "admin" ? "/admin-dashboard" : "/user-dashboard";
-    } catch {
-        window.location.href = "/user-dashboard";
-    }
+        const user = Auth.getUser();
+        if (user.role) {
+            window.location.href = user.role === "admin" ? "/admin-dashboard" : "/user-dashboard";
+        }
+    } catch (e) {}
 }
 
 function showToast(message, type = "info") {

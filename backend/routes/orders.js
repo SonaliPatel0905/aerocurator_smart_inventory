@@ -55,21 +55,30 @@ router.get('/requests', requireAuth, async (req, res) => {
 
 // @route   PATCH /api/requests/:id
 // @desc    Update request status (Admin only)
-router.patch('/requests/:id', requireAuth, requireAdmin, async (req, res) => {
-    try {
-        const { status } = req.body;
-        if (!['approved', 'denied', 'pending'].includes(status)) {
-            return err(res, 'Invalid status');
-        }
+router.put('/requests/:id', requireAuth, requireAdmin, async (req, res) => {
+    const { status } = req.body;
+    if (!['pending', 'approved', 'declined'].includes(status)) {
+        return err(res, "Invalid status", 400);
+    }
 
-        const request = await Request.findById(req.params.id);
-        if (!request) return err(res, 'Request not found');
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const request = await Request.findById(req.params.id).session(session);
+        if (!request) {
+            await session.abortTransaction();
+            return err(res, "Request not found", 404);
+        }
 
         // Fulfillment Logic: If approved, subtract from inventory
         if (status === 'approved' && request.status !== 'approved') {
-            const component = await Component.findById(request.component_id);
-            if (!component) return err(res, 'Target component no longer exists in catalog.');
+            const component = await Component.findById(request.component_id).session(session);
+            if (!component) {
+                await session.abortTransaction();
+                return err(res, 'Target component no longer exists in catalog.');
+            }
             if (component.quantity < request.quantity) {
+                 await session.abortTransaction();
                  return err(res, `Insufficient hangar stock. Available: ${component.quantity}, Requested: ${request.quantity}`);
             }
             component.quantity -= request.quantity;

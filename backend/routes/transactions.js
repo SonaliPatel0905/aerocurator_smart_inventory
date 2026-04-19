@@ -30,32 +30,70 @@ router.post('/purchase', requireAuth, requireAdmin, async (req, res) => {
         return err(res, error.message, 500);
     }
 });
-
 router.get('/sales', requireAuth, async (req, res) => {
     const list = await Sale.find({}).sort({ date: -1 }).populate('component_id', 'name sku');
     return ok(res, list.map(i => i.toJSON()));
 });
 
-router.post('/sales', requireAuth, requireAdmin, async (req, res) => {
-    const { customer, component_id, quantity, price_per_unit } = req.body;
-    if(quantity < 1) return err(res, "Quantity must be positive", 400);
-    
+router.post('/purchase', requireAuth, requireAdmin, async (req, res) => {
+    const { component_id, quantity, price } = req.body;
+    if (quantity <= 0) return err(res, "Quantity must be positive", 400);
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-        const item = await Component.findById(component_id);
-        if(!item) return err(res, "Component not found", 404);
-        
-        if (item.quantity - quantity < 0) {
-            return err(res, "Insufficient stock", 409); // Required by test suite
+        const item = await Component.findById(component_id).session(session);
+        if (!item) {
+            await session.abortTransaction();
+            return err(res, "Item not found", 404);
         }
-        
-        item.quantity -= Number(quantity);
-        await item.save();
-        
-        const total_price = quantity * price_per_unit;
-        const sale = await Sale.create({ customer, component_id, quantity, price_per_unit, total_price });
-        return ok(res, sale.toJSON(), "Sale completed", 201);
-    } catch (error) {
-        return err(res, error.message, 500);
+
+        item.quantity += quantity;
+        await item.save({ session });
+
+        const purchase = new Purchase({
+            component_id, component_name: item.name, quantity, price,
+            total_price: quantity * price, buyer_id: req.user.id
+        });
+        await purchase.save({ session });
+        await session.commitTransaction();
+        return ok(res, purchase, "Purchase recorded and stock updated");
+    } catch (e) {
+        await session.abortTransaction();
+        return err(res, e.message, 500);
+    } finally {
+        session.endSession();
+    }
+});
+
+router.post('/sales', requireAuth, requireAdmin, async (req, res) => {
+    const { component_id, quantity, price } = req.body;
+    if (quantity <= 0) return err(res, "Quantity must be positive", 400);
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const item = await Component.findById(component_id).session(session);
+        if (!item || item.quantity < quantity) {
+            await session.abortTransaction();
+            return err(res, "Insufficient stock", 409);
+        }
+
+        item.quantity -= quantity;
+        await item.save({ session });
+
+        const sale = new Sale({
+            component_id, component_name: item.name, quantity, price,
+            total_price: quantity * price, seller_id: req.user.id
+        });
+        await sale.save({ session });
+        await session.commitTransaction();
+        return ok(res, sale, "Sale recorded and stock updated");
+    } catch (e) {
+        await session.abortTransaction();
+        return err(res, e.message, 500);
+    } finally {
+        session.endSession();
     }
 });
 

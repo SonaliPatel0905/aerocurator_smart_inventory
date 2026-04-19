@@ -46,6 +46,29 @@ router.post('/logout', requireAuth, (req, res) => {
     return ok(res, null, "Logged out");
 });
 
+router.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
+    if (req.user.id === req.params.id) {
+        return err(res, "Security Lockout: You cannot terminate your own administrative session.", 400);
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const user = await User.findByIdAndDelete(req.params.id).session(session);
+        if(!user) {
+            await session.abortTransaction();
+            return err(res, "Member not found in registry", 404);
+        }
+        await session.commitTransaction();
+        return ok(res, null, "User deleted successfully");
+    } catch (e) {
+        await session.abortTransaction();
+        return err(res, e.message, 500);
+    } finally {
+        session.endSession();
+    }
+});
+
 router.get('/me', requireAuth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
