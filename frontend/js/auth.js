@@ -12,15 +12,15 @@ const Auth = {
         const user = this.getUser();
 
         if (!token) {
-            window.location.href = "/";
+            if (window.location.pathname !== "/" && window.location.pathname !== "/signup") {
+                window.location.href = "/";
+            }
             return false;
         }
 
         if (requiredRole && user.role !== requiredRole) {
-            showToast("Critical: Access Denied. Redirecting to your assigned terminal.", "error");
-            setTimeout(() => {
-                window.location.href = user.role === "admin" ? "/admin-dashboard" : "/user-dashboard";
-            }, 1500);
+            console.warn(`Access Denied: Required ${requiredRole}, found ${user.role}`);
+            window.location.href = user.role === "admin" ? "/admin-dashboard" : "/user-dashboard";
             return false;
         }
 
@@ -39,6 +39,9 @@ const Auth = {
 
     /** Store session after login */
     setSession(token, name, email, role) {
+        // Clear all session artifacts to prevent role-based state leakage
+        localStorage.clear(); 
+        
         localStorage.setItem("ac_token", token);
         localStorage.setItem("ac_user", JSON.stringify({ token, name, email, role }));
     },
