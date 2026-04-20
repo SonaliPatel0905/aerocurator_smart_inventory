@@ -51,21 +51,14 @@ router.put('/inventory/update/:id', requireAuth, requireAdmin, async (req, res) 
 });
 
 router.delete('/inventory/delete/:id', requireAuth, requireAdmin, async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const item = await Component.findByIdAndDelete(req.params.id).session(session);
+        const item = await Component.findByIdAndDelete(req.params.id);
         if(!item) {
-            await session.abortTransaction();
             return err(res, "Item not found", 404);
         }
-        await session.commitTransaction();
         return ok(res, null, "Item deleted");
     } catch (error) {
-        await session.abortTransaction();
         return err(res, error.message, 500);
-    } finally {
-        session.endSession();
     }
 });
 

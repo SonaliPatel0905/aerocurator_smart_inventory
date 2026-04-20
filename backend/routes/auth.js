@@ -105,7 +105,7 @@ router.post('/forgot-password', async (req, res) => {
 
         await user.save();
         console.log(`[SIMULATION] Reset token for ${email}: ${resetToken}`);
-        return ok(res, null, "Reset token generated and logged (simulated)");
+        return ok(res, { token: resetToken }, `Reset token generated: ${resetToken} (Simulated)`);
     } catch (error) {
         return err(res, error.message, 500);
     }
@@ -184,21 +184,14 @@ router.delete('/api/users/:id', requireAuth, requireAdmin, async (req, res) => {
         return err(res, "Self-termination forbidden: Cannot delete your own session.", 400);
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const user = await User.findByIdAndDelete(req.params.id).session(session);
+        const user = await User.findByIdAndDelete(req.params.id);
         if (!user) {
-            await session.abortTransaction();
             return err(res, "Member not found", 404);
         }
-        await session.commitTransaction();
         return ok(res, null, "Member successfully removed from registry");
     } catch (e) {
-        await session.abortTransaction();
         return err(res, e.message, 500);
-    } finally {
-        session.endSession();
     }
 });
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Request = require('../models/Request');
 const Component = require('../models/Component');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
@@ -55,30 +56,25 @@ router.get('/requests', requireAuth, async (req, res) => {
 
 // @route   PATCH /api/requests/:id
 // @desc    Update request status (Admin only)
-router.put('/requests/:id', requireAuth, requireAdmin, async (req, res) => {
+router.patch('/requests/:id', requireAuth, requireAdmin, async (req, res) => {
     const { status } = req.body;
-    if (!['pending', 'approved', 'declined'].includes(status)) {
-        return err(res, "Invalid status", 400);
+    if (!['pending', 'approved', 'denied'].includes(status)) {
+        return err(res, "Invalid status. Must be pending, approved, or denied.", 400);
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-        const request = await Request.findById(req.params.id).session(session);
+        const request = await Request.findById(req.params.id);
         if (!request) {
-            await session.abortTransaction();
             return err(res, "Request not found", 404);
         }
 
         // Fulfillment Logic: If approved, subtract from inventory
         if (status === 'approved' && request.status !== 'approved') {
-            const component = await Component.findById(request.component_id).session(session);
+            const component = await Component.findById(request.component_id);
             if (!component) {
-                await session.abortTransaction();
                 return err(res, 'Target component no longer exists in catalog.');
             }
             if (component.quantity < request.quantity) {
-                 await session.abortTransaction();
                  return err(res, `Insufficient hangar stock. Available: ${component.quantity}, Requested: ${request.quantity}`);
             }
             component.quantity -= request.quantity;
